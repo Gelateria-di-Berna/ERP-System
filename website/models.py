@@ -1,6 +1,7 @@
 from . import db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
+from sqlalchemy.orm import backref
 
 # Tabelle für die Zuordnung von Nutzern zu Standorten
 users_locations = db.Table('users_locations',
@@ -20,10 +21,18 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(150))
     surname = db.Column(db.String(150))
     password = db.Column(db.String(150))
-    notes = db.relationship("Note")
-    locations = db.relationship("Location", secondary=users_locations, backref=db.backref('assigned_users', lazy='dynamic'))
+    #notes = db.relationship("Note")
+    locations = db.relationship(
+        "Location", 
+        secondary=users_locations, 
+        backref= "users"
+        )
 
-
+    def add_location(self, name, address):
+        new_location = Location(name=name, address=address)
+        self.locations.append(new_location)
+        db.session.add(new_location)
+        db.session.commit()
 # #GdB
 # class Article(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -45,11 +54,10 @@ class User(db.Model, UserMixin):
     
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    address = db.Column(db.String(100))
+    name = db.Column(db.String(100), unique=True)
+    address = db.Column(db.String(100), unique=True)
     #products = db.relationship("Product")
-    users = db.relationship("User", secondary=users_locations, backref=db.backref('work_locations', lazy='dynamic'))
-    
+
 # class User2(db.Model, UserMixin):
 #     id = db.Column(db.Integer, primary_key=True)
 #     email = db.Column(db.String(150), unique=True)
